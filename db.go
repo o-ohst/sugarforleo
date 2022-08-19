@@ -23,14 +23,14 @@ type User struct {
 	remarks string
 }
 
-func connectDB() (*pgxpool.Pool, error) {
+func connectDB() (*pgxpool.Pool) {
 	db, err := pgxpool.Connect(context.Background(), databaseUrl)
 	if err != nil {
 		log.Fatalln(err)
-		return nil, err
+		return nil
 	}
 	log.Println("Connected to database")
-	return db, nil
+	return db
 }
 
 func initDB(db *pgxpool.Pool) {
@@ -94,7 +94,7 @@ func getParent(db *pgxpool.Pool, username string) (User, error) {
 	var parent string
 	err := db.QueryRow(context.Background(), "select parent from users where username = $1", username).Scan(&parent)
 	if err != nil {
-		log.Fatalln(err)
+		log.Println(err)
 		return User{}, err
 	}
 	return getUser(db, parent)
@@ -104,7 +104,7 @@ func getBaby(db *pgxpool.Pool, username string) (User, error) {
 	var baby string
 	err := db.QueryRow(context.Background(), "select baby from users where username = $1", username).Scan(&baby)
 	if err != nil {
-		log.Fatalln(err)
+		log.Println(err)
 		return User{}, err
 	}
 	return getUser(db, baby)

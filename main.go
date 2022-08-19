@@ -53,6 +53,8 @@ func (b *bot) handleMessage(update *echotron.Update) stateFn {
 		echotron.BotCommand{Command: "/baby", Description: "Talk to your sugar baby"},
 		echotron.BotCommand{Command: "/help", Description: "Get help"},
 		echotron.BotCommand{Command: "/destroyplanet", Description: "Destroy the planet"})
+	
+	log.Println(update.Message.From.Username + " says: " + update.Message.Text);
 
 	switch update.Message.Text {
 	case "/start":
@@ -304,10 +306,7 @@ func (b *bot) handleMessageToBaby(update *echotron.Update) stateFn {
 }
 
 func main() {
-	db, err := connectDB()
-	if err != nil {
-		log.Fatal(err)
-	}
+	db := connectDB()
 	defer db.Close()
 
 	initDB(db)
