@@ -316,6 +316,7 @@ func (b *bot) handleMessageToBaby(update *echotron.Update) stateFn {
 	return b.handleMessageToBaby
 }
 
+//env goos=linux goarch=amd64 go build -o ./bin/sugarforleo 
 func main() {
 	db := connectDB()
 	defer db.Close()
