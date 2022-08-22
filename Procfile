@@ -1,1 +1,1 @@
-worker ./bin/sugarforleo
+worker: ./bin/sugarforleo
