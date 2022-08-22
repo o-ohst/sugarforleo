@@ -108,6 +108,12 @@ func (b *bot) handleAdmin(update *echotron.Update) stateFn {
 	case "/done":
 		b.SendMessage("Exited admin mode", b.chatID, nil)
 		return b.handleMessage
+	case "/resetandpopulatedata":
+		devResetDB(b.db)
+		initDB(b.db)
+		populateDB(b.db)
+		b.SendMessage("Data reset and populated", b.chatID, nil)
+		return b.handleMessage
 	case "/startsugarforleo":
 		startGame(b.db)
 		if isGameStarted(b.db) {
@@ -166,6 +172,7 @@ func (b *bot) handleAdmin(update *echotron.Update) stateFn {
 func (b *bot) handleStart(update *echotron.Update) stateFn {
 	username := update.Message.From.Username
 	if !checkUser(b.db, username) {
+		log.Println(update.Message.From.Username + " tried to start the bot.");
 		b.SendMessage("You are not a registered participant. 😬😬😬 Please contact the house comm.", b.chatID, nil)
 		return b.handleMessage
 	}
@@ -181,7 +188,9 @@ func (b *bot) handleStart(update *echotron.Update) stateFn {
 }
 
 func (b *bot) handleBabyInfo(update *echotron.Update) stateFn {
+
 	username := update.Message.From.Username
+	log.Println(username + " sent /babyinfo.");
 	baby, err := getBaby(b.db, username)
 	if err != nil {
 		log.Println(err)
@@ -200,6 +209,7 @@ func (b *bot) handleBabyInfo(update *echotron.Update) stateFn {
 func (b *bot) handleMessageToParent(update *echotron.Update) stateFn {
 
 	username := update.Message.From.Username
+	log.Println(username + " says to parent: " + update.Message.Text);
 	parent, err := getParent(b.db, username)
 	if err != nil {
 		log.Println(err)
@@ -254,6 +264,7 @@ func (b *bot) handleMessageToParent(update *echotron.Update) stateFn {
 func (b *bot) handleMessageToBaby(update *echotron.Update) stateFn {
 
 	username := update.Message.From.Username
+	log.Println(username + " says to baby: " + update.Message.Text);
 	baby, err := getBaby(b.db, username)
 	if err != nil {
 		log.Println(err)
