@@ -31,7 +31,7 @@ func newBotWithDB(db *pgxpool.Pool, token string) echotron.NewBotFn {
 			API:    echotron.NewAPI(token),
 			db:     db,
 		}
-		bot.state = bot.handleMessage
+		bot.state = bot.handleInitMessage
 		return bot
 	}
 
@@ -43,7 +43,7 @@ func (b *bot) Update(update *echotron.Update) {
 	b.state = b.state(update)
 }
 
-func (b *bot) handleMessage(update *echotron.Update) stateFn {
+func (b *bot) handleInitMessage(update *echotron.Update) stateFn {
 
 	b.API.SetMyCommands(
 		&echotron.CommandOptions{LanguageCode: "en"},
@@ -53,7 +53,38 @@ func (b *bot) handleMessage(update *echotron.Update) stateFn {
 		echotron.BotCommand{Command: "/baby", Description: "Talk to your sugar baby"},
 		echotron.BotCommand{Command: "/help", Description: "Get help"},
 		echotron.BotCommand{Command: "/destroyplanet", Description: "Destroy the planet"})
-	
+
+	log.Println(update.Message.From.Username + " says: " + update.Message.Text);
+
+	switch update.Message.Text {
+	case "/start":
+		return b.handleStart(update)
+	default:
+		b.SendMessage("Please /start the bot first.", b.chatID, nil)
+		return b.handleInitMessage;
+	}
+}
+
+func (b *bot) handleStart(update *echotron.Update) stateFn {
+	username := update.Message.From.Username
+	if !checkUser(b.db, username) {
+		log.Println(update.Message.From.Username + " tried to start the bot.");
+		b.SendMessage("You are not a registered participant. 😬😬😬 Please contact the house comm.", b.chatID, nil)
+		return b.handleInitMessage
+	}
+	setChatID(b.db, username, b.chatID)
+	log.Println(username + " started the bot, chatID: " + fmt.Sprint(b.chatID))
+	if isGameStarted(b.db) {
+		b.SendMessage("🦁🍬Welcome to Sugar for Leo bot! Send /babyinfo to get your sugar baby's info. Send /parent to talk to your sugar parent, /baby to talk to your sugar baby!", b.chatID, nil)
+		return b.handleMessage
+	} else {
+		b.SendMessage("🦁🍬Welcome to Sugar for Leo bot! Sugar for Leo has not started. Please wait for announcement!!!🥵🥵🥵", b.chatID, nil)
+		return b.handleMessage
+	}
+}
+
+func (b *bot) handleMessage(update *echotron.Update) stateFn {
+
 	log.Println(update.Message.From.Username + " says: " + update.Message.Text);
 
 	switch update.Message.Text {
@@ -169,24 +200,6 @@ func (b *bot) handleAdmin(update *echotron.Update) stateFn {
 	}
 }
 
-func (b *bot) handleStart(update *echotron.Update) stateFn {
-	username := update.Message.From.Username
-	if !checkUser(b.db, username) {
-		log.Println(update.Message.From.Username + " tried to start the bot.");
-		b.SendMessage("You are not a registered participant. 😬😬😬 Please contact the house comm.", b.chatID, nil)
-		return b.handleMessage
-	}
-	setChatID(b.db, username, b.chatID)
-	log.Println(username + " started the bot, chatID: " + fmt.Sprint(b.chatID))
-	if isGameStarted(b.db) {
-		b.SendMessage("🦁🍬Welcome to Sugar for Leo bot! Send /babyinfo to get your sugar baby's info. Send /parent to talk to your sugar parent, /baby to talk to your sugar baby!", b.chatID, nil)
-		return b.handleMessage
-	} else {
-		b.SendMessage("🦁🍬Welcome to Sugar for Leo bot! Sugar for Leo has not started. Please wait for announcement!!!🥵🥵🥵", b.chatID, nil)
-		return b.handleMessage
-	}
-}
-
 func (b *bot) handleBabyInfo(update *echotron.Update) stateFn {
 
 	username := update.Message.From.Username
@@ -194,7 +207,7 @@ func (b *bot) handleBabyInfo(update *echotron.Update) stateFn {
 	baby, err := getBaby(b.db, username)
 	if err != nil {
 		log.Println(err)
-		return b.handleMessage
+		return b.handleMessage 
 	}
 	b.SendMessage("<b>Your sugar baby is</b> "+baby.name+", staying in "+baby.unit+"\n\n"+
 		"<b>Tolerance level:</b> "+baby.level+"\n\n"+
