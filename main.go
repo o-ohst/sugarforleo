@@ -31,7 +31,7 @@ func newBotWithDB(db *pgxpool.Pool, token string) echotron.NewBotFn {
 			API:    echotron.NewAPI(token),
 			db:     db,
 		}
-		bot.state = bot.handleInitMessage
+		bot.state = bot.handleMessage
 		return bot
 	}
 
@@ -43,7 +43,7 @@ func (b *bot) Update(update *echotron.Update) {
 	b.state = b.state(update)
 }
 
-func (b *bot) handleInitMessage(update *echotron.Update) stateFn {
+func (b *bot) handleMessage(update *echotron.Update) stateFn {
 
 	b.API.SetMyCommands(
 		&echotron.CommandOptions{LanguageCode: "en"},
@@ -55,31 +55,26 @@ func (b *bot) handleInitMessage(update *echotron.Update) stateFn {
 		echotron.BotCommand{Command: "/destroyplanet", Description: "Destroy the planet"})
 
 	if update.Message == nil {
-		return b.handleInitMessage
-	}
-
-	log.Println(update.Message.From.Username + " says: " + update.Message.Text)
-
-	switch update.Message.Text {
-	case "/start":
-		return b.handleStart(update)
-	default:
-		b.SendMessage("Please /start the bot first.", b.chatID, nil)
-		return b.handleInitMessage
-	}
-}
-
-func (b *bot) handleMessage(update *echotron.Update) stateFn {
-
-	if update.Message == nil {
 		return b.handleMessage
 	}
 
 	log.Println(update.Message.From.Username + " says: " + update.Message.Text)
 
-	switch update.Message.Text {
-	case "/start":
+	if update.Message.Text == "/start" { //always allow /start
 		return b.handleStart(update)
+	}
+
+	user, err := getUser(b.db, update.Message.From.Username)
+	if err != nil {
+		log.Println(err)
+		return b.handleMessage
+	}
+
+	if (!user.chatID.Valid) { //if user not started, return
+		return b.handleMessage
+	}
+
+	switch update.Message.Text {
 	case "/parent":
 		if !(isGameStarted(b.db)) {
 			b.SendMessage("Sugar for Leo has not started. Please wait for update!!! 🥵", b.chatID, nil)
@@ -129,7 +124,7 @@ func (b *bot) handleStart(update *echotron.Update) stateFn {
 	if !checkUser(b.db, username) {
 		log.Println(update.Message.From.Username + " tried to start the bot.")
 		b.SendMessage("You are not a registered participant. 😬😬😬 Please contact the house comm.", b.chatID, nil)
-		return b.handleInitMessage
+		return b.handleMessage
 	}
 	setChatID(b.db, username, b.chatID)
 	log.Println(username + " started the bot, chatID: " + fmt.Sprint(b.chatID))
@@ -233,10 +228,10 @@ func (b *bot) handleBabyInfo(update *echotron.Update) stateFn {
 	}
 	b.SendMessage("<b>Your sugar baby is</b> "+baby.name+", staying in "+baby.unit+"\n\n"+
 		"<b>Tolerance level:</b> "+baby.level+"\n\n"+
-		"❤️<b>Here are the likes of your sugar baby:</b>❤️"+"\n"+baby.likes+"\n\n"+
-		"👎<b>Here are the dislikes of your sugar baby:</b>👎"+"\n"+baby.dislikes+"\n\n"+
-		"❌<b>These are your sugar baby's no-gos:</b>❌"+"\n"+baby.nogos+"\n\n"+
-		"<b>Please take these remarks seriously:</b> \n"+baby.remarks+"\n\n"+
+		"❤️<b>Here are the likes of your sugar baby:</b>❤️"+"\n"+ strings.Replace(baby.likes, "<", "&lt;", -1) +"\n\n"+
+		"👎<b>Here are the dislikes of your sugar baby:</b>👎"+"\n"+ strings.Replace(baby.dislikes, "<", "&lt;", -1) +"\n\n"+
+		"❌<b>These are your sugar baby's no-gos:</b>❌"+"\n"+ strings.Replace(baby.nogos, "<", "&lt;", -1) +"\n\n"+
+		"<b>Please take these remarks seriously:</b> \n"+ strings.Replace(baby.remarks, "<", "&lt;", -1) +"\n\n"+
 		"Send /baby to start talking to your sugar baby!!", b.chatID, &echotron.MessageOptions{ParseMode: "HTML"})
 	return b.handleMessage
 }

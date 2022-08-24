@@ -34,7 +34,7 @@ func connectDB() (*pgxpool.Pool) {
 }
 
 func initDB(db *pgxpool.Pool) {
-	db.Exec(context.Background(), "create table if not exists users (id serial primary key, username varchar(255) unique not null, chatid int unique, parent varchar(255) not null, baby varchar(255) not null, name varchar(255) not null, unit varchar(255) not null, level varchar(255) not null, likes text default '', dislikes text default '', nogos text default '', remarks text default '')")
+	db.Exec(context.Background(), "create table if not exists users (id serial primary key, username varchar(255) unique not null, chatid bigint unique, parent varchar(255) not null, baby varchar(255) not null, name varchar(255) not null, unit varchar(255) not null, level varchar(255) not null, likes text default '', dislikes text default '', nogos text default '', remarks text default '')")
 	db.Exec(context.Background(), "create table if not exists state (id serial primary key, started boolean not null default false)")
 	db.Exec(context.Background(), "insert into state (id, started) values (1, false)")
 }
