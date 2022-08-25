@@ -70,7 +70,7 @@ func (b *bot) handleMessage(update *echotron.Update) stateFn {
 		return b.handleMessage
 	}
 
-	if (!user.chatID.Valid) { //if user not started, return
+	if !user.chatID.Valid { //if user not started, return
 		return b.handleMessage
 	}
 
@@ -228,10 +228,10 @@ func (b *bot) handleBabyInfo(update *echotron.Update) stateFn {
 	}
 	b.SendMessage("<b>Your sugar baby is</b> "+baby.name+", staying in "+baby.unit+"\n\n"+
 		"<b>Tolerance level:</b> "+baby.level+"\n\n"+
-		"❤️<b>Here are the likes of your sugar baby:</b>❤️"+"\n"+ strings.Replace(baby.likes, "<", "&lt;", -1) +"\n\n"+
-		"👎<b>Here are the dislikes of your sugar baby:</b>👎"+"\n"+ strings.Replace(baby.dislikes, "<", "&lt;", -1) +"\n\n"+
-		"❌<b>These are your sugar baby's no-gos:</b>❌"+"\n"+ strings.Replace(baby.nogos, "<", "&lt;", -1) +"\n\n"+
-		"<b>Please take these remarks seriously:</b> \n"+ strings.Replace(baby.remarks, "<", "&lt;", -1) +"\n\n"+
+		"❤️<b>Here are the likes of your sugar baby:</b>❤️"+"\n"+strings.Replace(baby.likes, "<", "&lt;", -1)+"\n\n"+
+		"👎<b>Here are the dislikes of your sugar baby:</b>👎"+"\n"+strings.Replace(baby.dislikes, "<", "&lt;", -1)+"\n\n"+
+		"❌<b>These are your sugar baby's no-gos:</b>❌"+"\n"+strings.Replace(baby.nogos, "<", "&lt;", -1)+"\n\n"+
+		"<b>Please take these remarks seriously:</b> \n"+strings.Replace(baby.remarks, "<", "&lt;", -1)+"\n\n"+
 		"Send /baby to start talking to your sugar baby!!", b.chatID, &echotron.MessageOptions{ParseMode: "HTML"})
 	return b.handleMessage
 }
@@ -262,7 +262,7 @@ func (b *bot) handleMessageToParent(update *echotron.Update) stateFn {
 		b.SendMessage("You are no longer talking to your sugar parent.", b.chatID, nil)
 		return b.handleMessage
 	case "/parent":
-		b.SendMessage("🎅You are now talking to your sugar parent. Send /done to finish. You can send multiple messages at a time, including photos, videos and stickers. (Try not to spam🥵)", b.chatID, nil)
+		b.SendMessage("🎅You are now talking to your sugar parent. (Each message will be sent immediately!!) You can send multiple messages at a time, including photos, videos and stickers. Send /done to exit.", b.chatID, nil)
 		return b.handleMessageToParent
 	case "/baby":
 		return b.handleMessageToBaby(update)
@@ -321,7 +321,7 @@ func (b *bot) handleMessageToBaby(update *echotron.Update) stateFn {
 		b.SendMessage("You are no longer talking to your sugar baby.", b.chatID, nil)
 		return b.handleMessage
 	case "/baby":
-		b.SendMessage("👶You are now talking to your sugar baby. Send /done to finish. You can send multiple messages at a time, including photos, videos and stickers. (Try not to spam🥵)", b.chatID, nil)
+		b.SendMessage("👶You are now talking to your sugar baby. (Each message will be sent immediately!!) You can send multiple messages at a time, including photos, videos and stickers. Send /done to exit.", b.chatID, nil)
 		return b.handleMessageToBaby
 	case "/parent":
 		return b.handleMessageToParent(update)
